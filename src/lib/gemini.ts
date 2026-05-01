@@ -1,0 +1,29 @@
+import { GoogleGenAI } from "@google/genai";
+
+let ai: GoogleGenAI | null = null;
+try {
+  ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
+} catch (e) {
+  console.warn("Gemini API key is missing or invalid.");
+}
+
+export async function generateResponse(prompt: string, language: string = 'en') {
+  try {
+    if (!ai) {
+      throw new Error("Gemini AI client not initialized (missing API key).");
+    }
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+            {
+                role: 'user',
+                parts: [{ text: `You are VoteSaathi, India's most trusted election education assistant. You help every Indian citizen — regardless of education, language, age, or ability — understand the election process clearly and confidently. Rules: 1) Always respond in the user's detected language (${language}). 2) Keep answers to 3 sentences maximum unless asked for more. 3) Never mention political parties or candidates by name. 4) If you don't know, say so and suggest the ECI helpline 1950. 5) For legal queries, always append 'For official advice, call ECI helpline 1950.' 6) Use simple Grade 4 vocabulary. \n\nUser Question: ${prompt}` }]
+            }
+        ]
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "I'm sorry, I am having trouble connecting right now. Please try again later or call the ECI helpline at 1950.";
+  }
+}

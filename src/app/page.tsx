@@ -1,65 +1,147 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import ChatInterface from '@/components/ChatInterface';
+import EVMSimulator from '@/components/EVMSimulator';
+import ArEvm from '@/components/ArEvm';
+import AccessibilityToggle from '@/components/AccessibilityToggle';
+import ElectionTimeline from '@/components/ElectionTimeline';
+import FloatingStickers from '@/components/FloatingStickers';
+import { ShieldCheck, MessageSquare, Box, ArrowDown, Camera } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Home() {
+  const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'chat' | 'evm' | 'ar'>('chat');
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col h-full w-full relative bg-transparent text-slate-800 overflow-x-hidden">
+      <FloatingStickers />
+      <AccessibilityToggle />
+      
+      {/* Hero Section */}
+      <section className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto glass-bright p-8 md:p-16 rounded-[3rem]"
+        >
+          <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm">
+            Welcome to VoteSaathi
+          </div>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+            {t.heroTitle1} <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">{t.heroTitle2}</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl text-slate-700 mb-10 max-w-2xl mx-auto leading-relaxed">
+            {t.heroSubtitle}
           </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button 
+              onClick={() => scrollToSection('learn-to-vote')}
+              className="px-8 py-4 rounded-full bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2"
+            >
+              {t.startLearning}
+              <ArrowDown size={20} />
+            </button>
+            <button 
+              onClick={() => scrollToSection('practice-zone')}
+              className="px-8 py-4 rounded-full bg-white text-slate-900 font-bold text-lg border-2 border-slate-200 hover:border-primary transition-all shadow-md"
+            >
+              {t.trySimulator}
+            </button>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Educational Timeline Section */}
+      <ElectionTimeline />
+
+      {/* Interactive Practice Zone */}
+      <section id="practice-zone" className="py-24 px-4 bg-white border-t border-slate-200 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">{t.practiceTitle}</h2>
+            <p className="text-lg text-slate-600">
+              {t.practiceSubtitle}
+            </p>
+          </div>
+
+          <div className="w-full glass-bright-card rounded-3xl border border-slate-200 overflow-hidden relative z-20">
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-slate-200">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
+                  activeTab === 'chat' 
+                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <MessageSquare size={20} />
+                Saathi Bot
+              </button>
+              <button
+                onClick={() => setActiveTab('evm')}
+                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
+                  activeTab === 'evm' 
+                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Box size={20} />
+                EVM Simulator
+              </button>
+              <button
+                onClick={() => setActiveTab('ar')}
+                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
+                  activeTab === 'ar' 
+                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Camera size={20} />
+                AR Hologram
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="bg-slate-50/80 p-4 md:p-8 min-h-[600px]">
+              {activeTab === 'chat' ? (
+                <div className="animate-fade-in h-full">
+                  <ChatInterface />
+                </div>
+              ) : activeTab === 'evm' ? (
+                <div className="animate-fade-in">
+                  <div className="mb-6 text-center">
+                    <h3 className="text-2xl font-bold flex items-center justify-center gap-2 text-slate-900">
+                      <ShieldCheck className="text-secondary" />
+                      Practice Voting
+                    </h3>
+                    <p className="text-slate-600 mt-2">
+                      Press the blue button next to your candidate's symbol. You will hear a beep and see the VVPAT slip print for 7 seconds to verify your vote.
+                    </p>
+                  </div>
+                  <EVMSimulator />
+                </div>
+              ) : (
+                <div className="animate-fade-in h-full flex-1">
+                  <ArEvm />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
     </div>
   );
 }
