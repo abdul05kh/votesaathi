@@ -80,6 +80,16 @@ export default function EVMSimulator() {
             <span className="text-xs font-bold">BEEEEEEP</span>
           </div>
         )}
+        
+        {/* Skip button for EVM */}
+        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
+           <button 
+              onClick={() => setActiveLamp(null)}
+              className="bg-slate-300 dark:bg-slate-700 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors"
+            >
+              Skip Step
+            </button>
+        </div>
       </div>
 
       {/* VVPAT Unit */}
@@ -108,9 +118,11 @@ export default function EVMSimulator() {
           </div>
         </div>
         
-        <div className="mt-auto flex items-center gap-2 text-slate-500 dark:text-slate-400">
-          <Printer size={18} />
-          <span className="text-xs font-semibold uppercase">Verification Slip</span>
+        <div className="mt-auto flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+            <Printer size={18} />
+            <span className="text-xs font-semibold uppercase">Verification Slip</span>
+          </div>
         </div>
       </div>
     </div>

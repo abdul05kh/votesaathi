@@ -65,3 +65,33 @@ export async function analyzeBallot(imageBase64: string, language: string = 'en'
     return "Sorry, I couldn't analyze that image clearly. Make sure it's well-lit and try again.";
   }
 }
+
+const LAWYER_INSTRUCTION = `You are SanshayNivaran, the official AI Election Lawyer grounded strictly in the Representation of the People Act 1951, the Constitution of India, and Election Commission of India (ECI) guidelines. 
+Rules:
+1. Act formally and professionally, like a lawyer.
+2. Only answer questions related to Indian elections, voter rights, and election law. If the question is outside this scope, decline to answer.
+3. Ground your answers using the googleSearch tool to cite the actual Representation of the People Act 1951 where applicable.
+4. Keep answers concise but legally accurate.
+5. Provide responses in the user's requested language.
+6. Always end with a disclaimer: "Note: This is an AI interpretation. For official legal advice, please consult the ECI or a qualified advocate."`;
+
+export async function consultLawyer(prompt: string, language: string = 'en') {
+  try {
+    if (!ai) throw new Error("Gemini API client not initialized.");
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+            { role: 'user', parts: [{ text: `User Language: ${language}. Legal Question: ${prompt}` }] }
+        ],
+        config: {
+            systemInstruction: LAWYER_INSTRUCTION,
+            tools: [{ googleSearch: {} }],
+        }
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Gemini Lawyer Error:", error);
+    return "I am unable to access my legal database at this moment. Please try again later.";
+  }
+}

@@ -48,6 +48,7 @@ export default function ElectionTimeline() {
       
       // Delay first speech slightly for entry animation
       setTimeout(() => {
+        stop(); // Cancel any existing speech
         speak(scenes[0].desc, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
@@ -78,6 +79,7 @@ export default function ElectionTimeline() {
       
       // Add artificial delay for the hyperspace transition before speaking
       setTimeout(() => {
+        stop(); // Cancel any existing speech
         speak(scenes[next].desc, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
@@ -102,6 +104,7 @@ export default function ElectionTimeline() {
       setIsSpeakingState(true);
       
       setTimeout(() => {
+        stop(); // Cancel any existing speech
         speak(scenes[prev].desc, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
@@ -133,6 +136,7 @@ export default function ElectionTimeline() {
         setIsAiThinking(false);
         setIsSpeakingState(true);
         
+        stop(); // Cancel any existing speech
         speak(finalResponse, () => {
           setAiResponse(null);
           stateRef.current.isSpeaking = false;
@@ -326,8 +330,16 @@ export default function ElectionTimeline() {
             <button 
               onClick={() => setIsActive(false)}
               className="absolute top-8 right-8 z-[110] bg-white/10 hover:bg-white/20 hover:rotate-90 p-4 rounded-full text-white backdrop-blur-md transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+              title="Close Matrix"
             >
               <X size={32} />
+            </button>
+
+            <button 
+              onClick={() => setIsActive(false)}
+              className="absolute top-8 right-28 z-[110] bg-white/10 hover:bg-white/20 px-6 py-4 rounded-full text-white backdrop-blur-md transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] font-bold tracking-widest uppercase text-sm"
+            >
+              Skip Experience
             </button>
 
             {/* Scroll Indicator */}

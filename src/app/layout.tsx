@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
-import LanguageSelector from "@/components/LanguageSelector";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +50,7 @@ export default function RootLayout({
                 <span className="text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:block">
                   Har Vote Ki Awaaz
                 </span>
-                <LanguageSelector />
+                <div id="google_translate_element" className="translate-widget"></div>
               </nav>
             </div>
           </header>
@@ -58,6 +58,27 @@ export default function RootLayout({
             {children}
           </main>
         </LanguageProvider>
+
+        {/* Google Translate Script */}
+        <Script
+          id="google-translate-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              function googleTranslateElementInit() {
+                new google.translate.TranslateElement({
+                  pageLanguage: 'en',
+                  includedLanguages: 'en,hi,te,ta,bn,mr,gu,kn,ml,pa,or,as,ur,sa',
+                  layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                }, 'google_translate_element');
+              }
+            `,
+          }}
+        />
+        <Script
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

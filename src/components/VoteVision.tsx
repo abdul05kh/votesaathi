@@ -129,12 +129,12 @@ export default function VoteVision() {
             {isAnalyzing ? (
               <>
                 <div className="w-5 h-5 border-2 border-slate-300 border-t-transparent rounded-full animate-spin"></div>
-                Analyzing...
+                Verifying Document...
               </>
             ) : (
               <>
                 <Camera size={24} className="text-primary" />
-                Scan Ballot / EVM
+                Scan Voter ID / Aadhaar
               </>
             )}
           </button>
@@ -146,12 +146,12 @@ export default function VoteVision() {
 
       {/* Results Area */}
       {insight && (
-        <div className="w-full mt-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in flex items-start gap-4">
+        <div className="w-full mt-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in flex items-start gap-4 glass">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Maximize size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">VoteVision Insights</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Document Verification Insights</h3>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-lg">{insight}</p>
             <button onClick={() => speak(insight)} className="mt-4 flex items-center gap-2 text-primary font-medium hover:underline">
               <Volume2 size={18} /> Replay Audio

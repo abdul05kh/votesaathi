@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* Bright Future ECI Theme */
-  --background: #f0f8ff; /* Light ice blue */
-  --foreground: #0a1128; /* Dark navy for text */
+  /* Ultra Premium Bright Future ECI Theme */
+  --background: #fafafa;
+  --foreground: #0f172a;
   
   /* Electric Saffron */
   --primary: #ff7b00;
@@ -14,7 +14,7 @@
   --secondary-foreground: #ffffff;
   
   /* Hyper Blue */
-  --accent: #2979ff;
+  --accent: #2563eb;
   --accent-foreground: #ffffff;
 }
 
@@ -31,39 +31,59 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #f0f8ff;
-    --foreground: #0a1128;
+    --background: #020617;
+    --foreground: #f8fafc;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  /* Add a very subtle, bright animated gradient to the background */
-  background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 50%, #fff5eb 100%);
+  
+  /* Premium Animated Mesh Gradient Background */
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(28,100%,74%,0.15) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(189,100%,56%,0.15) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(140,100%,70%,0.15) 0, transparent 50%);
   background-attachment: fixed;
+  background-size: cover;
+  animation: pulseGradient 15s ease-in-out infinite alternate;
 }
 
-/* Glassmorphism utilities - Bright and Crisp */
+@keyframes pulseGradient {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* Glassmorphism utilities - Ultra Premium */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px rgba(41, 121, 255, 0.1);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
 }
 
 .glass-dark {
-  /* Replacing glass-dark with a more vibrant frosted look */
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 1);
-  border-bottom: 2px solid rgba(255, 123, 0, 0.3);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-radius: 24px;
 }
 
 /* Accessibility Modes */
@@ -75,11 +95,12 @@ body.high-contrast {
   --secondary: #00ffff !important;
   --secondary-foreground: #000000 !important;
   --accent: #ff00ff !important;
-  --accent-foreground: #ffffff !important;
+  background-image: none !important;
 }
 
 body.high-contrast * {
   border-color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 body.picto {
@@ -88,23 +109,19 @@ body.picto {
   font-family: "Comic Sans MS", "Chalkboard SE", "Arial Rounded MT Bold", sans-serif !important;
   letter-spacing: 0.05em;
   font-size: 1.1rem;
+  background-image: none !important;
 }
 
 body.picto * {
-  border-radius: 16px !important;
+  border-radius: 24px !important;
   border-color: #3f51b5 !important;
-  border-width: 2px !important;
+  border-width: 3px !important;
 }
 
 body.neuro {
-  --background: #fdfbf7 !important;
-  --foreground: #4a4a4a !important;
-  --primary: #b2dfdb !important;
-  --primary-foreground: #004d40 !important;
-  --secondary: #c5cae9 !important;
-  --secondary-foreground: #1a237e !important;
-  --accent: #ffe082 !important;
-  --accent-foreground: #ff6f00 !important;
+  --background: #f8fafc !important;
+  --foreground: #334155 !important;
+  background-image: none !important;
 }
 
 body.neuro * {
@@ -112,16 +129,17 @@ body.neuro * {
   transition: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+  cursor: pointer !important; /* Indicate everything is clickable */
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* 3D Utilities */
@@ -133,4 +151,33 @@ body.neuro * {
 }
 .rotateX-75 {
   transform: rotateX(75deg);
+}
+
+/* Google Translate Widget Overrides */
+.translate-widget select {
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+.goog-te-gadget {
+  font-family: inherit !important;
+  color: transparent !important;
+}
+.goog-te-gadget span {
+  display: none !important;
+}
+.goog-logo-link {
+  display: none !important;
+}
+.goog-te-banner-frame {
+  display: none !important;
+}
+body {
+  top: 0 !important;
 }
