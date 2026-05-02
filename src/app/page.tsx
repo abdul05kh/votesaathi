@@ -8,12 +8,14 @@ import ArEvm from '@/components/ArEvm';
 import AccessibilityToggle from '@/components/AccessibilityToggle';
 import ElectionTimeline from '@/components/ElectionTimeline';
 import FloatingStickers from '@/components/FloatingStickers';
-import { ShieldCheck, MessageSquare, Box, ArrowDown, Camera } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Box, ArrowDown, Camera, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import VoteVision from '@/components/VoteVision';
+import PollingPathfinder from '@/components/PollingPathfinder';
 
 export default function Home() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'chat' | 'evm' | 'ar'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'evm' | 'ar' | 'vision' | 'pathfinder'>('chat');
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -112,6 +114,28 @@ export default function Home() {
                 <Camera size={20} />
                 AR Hologram
               </button>
+              <button
+                onClick={() => setActiveTab('vision')}
+                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
+                  activeTab === 'vision' 
+                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Camera size={20} />
+                VoteVision
+              </button>
+              <button
+                onClick={() => setActiveTab('pathfinder')}
+                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
+                  activeTab === 'pathfinder' 
+                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <MapPin size={20} />
+                Booth Locator
+              </button>
             </div>
 
             {/* Content Area */}
@@ -133,9 +157,17 @@ export default function Home() {
                   </div>
                   <EVMSimulator />
                 </div>
-              ) : (
+              ) : activeTab === 'ar' ? (
                 <div className="animate-fade-in h-full flex-1">
                   <ArEvm />
+                </div>
+              ) : activeTab === 'vision' ? (
+                <div className="animate-fade-in h-full flex-1">
+                  <VoteVision />
+                </div>
+              ) : (
+                <div className="animate-fade-in h-full flex-1">
+                  <PollingPathfinder />
                 </div>
               )}
             </div>

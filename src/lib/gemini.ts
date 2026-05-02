@@ -7,23 +7,61 @@ try {
   console.warn("Gemini API key is missing or invalid.");
 }
 
+const SYSTEM_INSTRUCTION = `You are VoteSaathi, India's most trusted election education assistant and SanshayNivaran (Legal Election Expert). You help every Indian citizen — regardless of education, language, age, or ability — understand the election process and their rights under the Representation of the People Act 1951.
+Rules: 
+1) Always respond in the user's detected language. 
+2) Keep answers to 3 sentences maximum unless asked for more details. 
+3) Never mention political parties or candidates by name. 
+4) If you don't know, say so and suggest the ECI helpline 1950. 
+5) For legal queries, always append 'For official advice, call ECI helpline 1950.' 
+6) Use simple Grade 4 vocabulary.`;
+
 export async function generateResponse(prompt: string, language: string = 'en') {
   try {
-    if (!ai) {
-      throw new Error("Gemini AI client not initialized (missing API key).");
-    }
+    if (!ai) throw new Error("Gemini API client not initialized.");
+    
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [
-            {
-                role: 'user',
-                parts: [{ text: `You are VoteSaathi, India's most trusted election education assistant. You help every Indian citizen — regardless of education, language, age, or ability — understand the election process clearly and confidently. Rules: 1) Always respond in the user's detected language (${language}). 2) Keep answers to 3 sentences maximum unless asked for more. 3) Never mention political parties or candidates by name. 4) If you don't know, say so and suggest the ECI helpline 1950. 5) For legal queries, always append 'For official advice, call ECI helpline 1950.' 6) Use simple Grade 4 vocabulary. \n\nUser Question: ${prompt}` }]
-            }
-        ]
+            { role: 'user', parts: [{ text: `User Language: ${language}. Question: ${prompt}` }] }
+        ],
+        config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            tools: [{ googleSearch: {} }], // Enables SanshayNivaran grounding
+        }
     });
     return response.text;
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "I'm sorry, I am having trouble connecting right now. Please try again later or call the ECI helpline at 1950.";
+  }
+}
+
+export async function analyzeBallot(imageBase64: string, language: string = 'en') {
+  try {
+    if (!ai) throw new Error("Gemini API client not initialized.");
+    
+    // Strip the data:image/...;base64, prefix if present
+    const base64Data = imageBase64.split(',')[1] || imageBase64;
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+            { 
+                role: 'user', 
+                parts: [
+                    { inlineData: { data: base64Data, mimeType: "image/jpeg" } },
+                    { text: `Analyze this image (could be an EVM ballot, Voter ID, or polling booth). Explain what it is and how to use it in very simple terms. Respond in ${language}.` }
+                ] 
+            }
+        ],
+        config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+        }
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Gemini Vision Error:", error);
+    return "Sorry, I couldn't analyze that image clearly. Make sure it's well-lit and try again.";
   }
 }
