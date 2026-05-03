@@ -15,6 +15,10 @@ export default function VoteVision() {
   const [insight, setInsight] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Starts the camera stream and attaches it to the video element.
+   * Handles cleanup of previous streams if necessary.
+   */
   const startCamera = useCallback(async () => {
     try {
       if (streamRef.current) {
@@ -31,8 +35,7 @@ export default function VoteVision() {
         videoRef.current.srcObject = mediaStream;
       }
       setError(null);
-    } catch (err) {
-      console.error("Error accessing camera:", err);
+    } catch {
       setError("Camera access denied or unavailable. Please allow camera permissions.");
     }
   }, []);
@@ -47,8 +50,12 @@ export default function VoteVision() {
     };
   }, [startCamera]);
 
+  /**
+   * Synthesizes speech from text using the Web Speech API.
+   * @param text The text to read aloud.
+   */
   const speak = useCallback((text: string) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = speechVoiceCode || 'en-IN';
@@ -140,7 +147,7 @@ export default function VoteVision() {
               </>
             ) : (
               <>
-                <Camera size={24} className="text-primary" />
+                <Camera size={24} className="text-primary" aria-hidden="true" />
                 Scan Voter ID / Aadhaar
               </>
             )}
@@ -155,7 +162,7 @@ export default function VoteVision() {
       {insight && (
         <div className="w-full mt-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 animate-fade-in flex items-start gap-4 glass">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <Maximize size={24} />
+            <Maximize size={24} aria-hidden="true" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Document Verification Insights</h3>

@@ -36,14 +36,23 @@ export default function ElectionLawyer() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  /**
+   * Replays the AI's legal advice using text-to-speech.
+   * Strips markdown characters for a cleaner spoken output.
+   * @param text The text to speak.
+   */
   const replayAudio = useCallback((text: string) => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text.replace(/[#*]/g, ''));
     utterance.lang = speechVoiceCode || 'en-IN';
     window.speechSynthesis.speak(utterance);
   }, [speechVoiceCode]);
 
+  /**
+   * Processes a legal query by calling the SanshayNivaran engine.
+   * Manages accessibility announcements and conversation state.
+   */
   const processMessage = useCallback(async (messageText: string) => {
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: messageText };
     setMessages(prev => [...prev, userMessage]);
@@ -114,7 +123,7 @@ export default function ElectionLawyer() {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-800 rounded-full border border-slate-700">
-          <Sparkles size={14} className="text-orange-400" />
+          <Sparkles size={14} className="text-orange-400" aria-hidden="true" />
           <span className="text-[10px] text-slate-400 font-bold uppercase">Pro Bono AI</span>
         </div>
       </div>

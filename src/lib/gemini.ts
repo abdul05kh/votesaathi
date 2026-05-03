@@ -36,20 +36,30 @@ const lawyerModel = getGenerativeModel(aiService, {
   systemInstruction: LAWYER_INSTRUCTION,
 });
 
-export async function generateResponse(prompt: string, language: string = 'en') {
+/**
+ * Generates a non-streaming response from the Saathi AI model.
+ * @param prompt - The user's query.
+ * @param language - The preferred language code (default 'en').
+ * @returns A promise resolving to the AI-generated text.
+ */
+export async function generateResponse(prompt: string, language: string = 'en'): Promise<string> {
   try {
     const result = await chatModel.generateContent(`User Language: ${language}. Question: ${prompt}`);
     return result.response.text();
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    // Fail gracefully with a fallback message and the ECI helpline
     return "I'm sorry, I am having trouble connecting right now. Please try again later or call the ECI helpline at 1950.";
   }
 }
 
 /**
- * Streaming version for a more premium UI experience.
+ * Generates a streaming response for real-time token delivery in the UI.
+ * This provides a more premium, sentient-feeling user experience.
+ * @param prompt - The user's query.
+ * @param language - The preferred language code (default 'en').
+ * @yields Chunks of token-by-token text as they arrive.
  */
-export async function* generateStreamingResponse(prompt: string, language: string = 'en') {
+export async function* generateStreamingResponse(prompt: string, language: string = 'en'): AsyncGenerator<string> {
   try {
     const result = await chatModel.generateContentStream(`User Language: ${language}. Question: ${prompt}`);
     for await (const chunk of result.stream) {
@@ -57,13 +67,19 @@ export async function* generateStreamingResponse(prompt: string, language: strin
       if (chunkText) yield chunkText;
     }
   } catch (error) {
-    console.error("Streaming Error:", error);
-    yield "Error connecting to Saathi engine.";
+    yield "Error: The Saathi engine is temporarily unavailable. Please check your connection.";
   }
 }
 
-export async function analyzeBallot(imageBase64: string, language: string = 'en') {
+/**
+ * Uses Gemini Multimodal capabilities to analyze an image (Voter ID, EVM, etc).
+ * @param imageBase64 - The base64-encoded image data.
+ * @param language - The preferred language code (default 'en').
+ * @returns A simple, helpful explanation of the image content.
+ */
+export async function analyzeBallot(imageBase64: string, language: string = 'en'): Promise<string> {
   try {
+    // Extract base64 data if it contains the data-uri prefix
     const base64Data = imageBase64.split(',')[1] || imageBase64;
     
     const result = await chatModel.generateContent([
@@ -72,17 +88,21 @@ export async function analyzeBallot(imageBase64: string, language: string = 'en'
     ]);
     return result.response.text();
   } catch (error) {
-    console.error("Gemini Vision Error:", error);
-    return "Sorry, I couldn't analyze that image clearly. Make sure it's well-lit and try again.";
+    return "Sorry, I couldn't analyze that image clearly. Make sure it's well-lit and contains an election-related document.";
   }
 }
 
-export async function consultLawyer(prompt: string, language: string = 'en') {
+/**
+ * Consults the SanshayNivaran Legal AI engine for election-law related queries.
+ * @param prompt - The legal query or dispute scenario.
+ * @param language - The preferred language code (default 'en').
+ * @returns Grounded legal guidance citing relevant Indian election law.
+ */
+export async function consultLawyer(prompt: string, language: string = 'en'): Promise<string> {
   try {
     const result = await lawyerModel.generateContent(`User Language: ${language}. Legal Question: ${prompt}`);
     return result.response.text();
   } catch (error) {
-    console.error("Gemini Lawyer Error:", error);
-    return "I am unable to access my legal database at this moment. Please try again later.";
+    return "The SanshayNivaran legal database is currently offline. For immediate assistance, please refer to the Representation of the People Act 1951.";
   }
 }

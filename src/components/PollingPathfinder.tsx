@@ -16,13 +16,17 @@ export default function PollingPathfinder() {
     lng: number;
   } | null>(null);
 
+  /**
+   * Simulates an ECI Voter ID lookup to retrieve polling booth information.
+   * In production, this would integrate with the live ECI API.
+   */
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!voterId.trim()) return;
     
     setIsSearching(true);
     
-    // Simulate API lookup
+    // Simulate API lookup delay for a realistic feel
     setTimeout(() => {
       setBoothData({
         name: 'Government Primary School, Booth 42',
@@ -47,7 +51,7 @@ export default function PollingPathfinder() {
         
         <div className="mb-8 text-center">
           <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MapPin size={32} />
+            <MapPin size={32} aria-hidden="true" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Find Your Polling Booth</h2>
           <p className="text-slate-600 dark:text-slate-400">Enter your Voter ID (EPIC Number) to get live directions and wait times.</p>
@@ -116,7 +120,7 @@ export default function PollingPathfinder() {
                     aria-label="Set election day reminder"
                     className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
                   >
-                    <Bell size={18} /> Remind
+                    <Bell size={18} aria-hidden="true" /> Remind
                   </button>
                 </div>
               </div>

@@ -10,6 +10,9 @@ export default function ArEvm() {
   const [votedFor, setVotedFor] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  /**
+   * Initializes the camera stream for Augmented Reality.
+   */
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -21,11 +24,14 @@ export default function ArEvm() {
       setHasPermission(true);
       setIsArActive(true);
     } catch (err) {
-      console.error("Error accessing camera:", err);
+      // Graceful error handling for permission denial
       setHasPermission(false);
     }
   };
 
+  /**
+   * Releases camera resources and exits AR mode.
+   */
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -41,15 +47,21 @@ export default function ArEvm() {
     };
   }, []);
 
+  /**
+   * Simulates a vote cast and triggers the VVPAT slip animation.
+   * @param candidateIndex The index of the candidate voted for.
+   */
   const handleVote = (candidateIndex: number) => {
     setVotedFor(candidateIndex);
-    // Play beep sound
-    const audio = new Audio('/beep.mp3'); // Assuming beep.mp3 exists or fallback
-    audio.play().catch(() => console.log("Audio play failed"));
     
+    // Play beep sound with silent fallback
+    const audio = new Audio('/beep.mp3');
+    audio.play().catch(() => {});
+    
+    // Reset state after VVPAT animation completes
     setTimeout(() => {
       setVotedFor(null);
-    }, 7000); // Reset after 7 seconds (VVPAT time)
+    }, 7000); 
   };
 
   const candidates = [
@@ -64,7 +76,7 @@ export default function ArEvm() {
       {!isArActive ? (
         <div className="text-center p-8 text-white">
           <div className="w-24 h-24 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Camera size={48} className="text-cyan-400" />
+            <Camera size={48} className="text-cyan-400" aria-hidden="true" />
           </div>
           <h3 className="text-3xl font-black mb-4">Summon Holographic EVM</h3>
           <p className="text-slate-400 mb-8 max-w-md mx-auto">
@@ -82,7 +94,12 @@ export default function ArEvm() {
           )}
         </div>
       ) : (
-        <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden perspective-[1000px]">
+        <div 
+          className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden perspective-[1000px]"
+          role="region"
+          aria-label="Holographic EVM AR View"
+          aria-live="polite"
+        >
           {/* AR Camera Feed Background */}
           <video 
             ref={videoRef} 
@@ -98,7 +115,7 @@ export default function ArEvm() {
             className="absolute top-4 right-4 z-50 p-2 bg-red-500 rounded-full text-white shadow-[0_0_15px_#ef4444]"
             aria-label="Close AR experience"
           >
-            <XCircle size={24} />
+            <XCircle size={24} aria-hidden="true" />
           </button>
 
           {/* Holographic UI Overlay */}
@@ -179,7 +196,7 @@ export default function ArEvm() {
                   <div className="text-black font-black text-xs mb-2 uppercase border-b-2 border-black w-full text-center pb-1">VVPAT Slip</div>
                   <div className="text-3xl mb-2">{candidates[votedFor].symbol}</div>
                   <div className="text-black font-bold text-sm">{candidates[votedFor].name}</div>
-                  <CheckCircle2 size={32} className="text-emerald-500 mt-4" />
+                  <CheckCircle2 size={32} className="text-emerald-500 mt-4" aria-hidden="true" />
                 </motion.div>
               )}
             </AnimatePresence>

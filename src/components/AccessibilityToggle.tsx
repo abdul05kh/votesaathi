@@ -16,15 +16,19 @@ export default function AccessibilityToggle() {
   const { voiceoverEnabled, setVoiceoverEnabled } = useVoiceoverContext();
 
   useEffect(() => {
-    // Remove all classes first
+    // Remove all classes first to ensure a clean state
     document.body.classList.remove('high-contrast', 'picto', 'neuro');
     
-    // Add specific class
+    // Add specific accessibility class if not in standard mode
     if (mode !== 'standard') {
       document.body.classList.add(mode);
     }
   }, [mode]);
 
+  /**
+   * NeuroFocus: Global click listener that reads out text from the clicked element.
+   * Helps users with neurodivergent needs or visual impairments.
+   */
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       if (mode === 'neuro') {
@@ -70,6 +74,7 @@ export default function AccessibilityToggle() {
               onClick={() => setMode('standard')}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'standard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-white/5'}`}
               aria-label="Switch to standard visual mode"
+              aria-pressed={mode === 'standard'}
             >
               <Type size={18} />
               <span className="text-sm font-bold">Standard</span>
@@ -79,15 +84,17 @@ export default function AccessibilityToggle() {
               onClick={() => setMode('high-contrast')}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'high-contrast' ? 'bg-[#ffff00] text-black shadow-lg shadow-yellow-500/20' : 'text-slate-400 hover:bg-white/5'}`}
               aria-label="Switch to high contrast mode"
+              aria-pressed={mode === 'high-contrast'}
             >
               <Eye size={18} />
               <span className="text-sm font-bold">Contrast+</span>
             </button>
-
++
             <button 
               onClick={() => setMode('picto')}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'picto' ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-slate-400 hover:bg-white/5'}`}
               aria-label="Switch to PictoVishwa icon-assisted mode"
+              aria-pressed={mode === 'picto'}
             >
               <span className="text-lg leading-none">🖼️</span>
               <span className="text-sm font-bold">PictoVishwa</span>
@@ -97,6 +104,7 @@ export default function AccessibilityToggle() {
               onClick={() => setMode('neuro')}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'neuro' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:bg-white/5'}`}
               aria-label="Switch to NeuroFocus reading-assistance mode"
+              aria-pressed={mode === 'neuro'}
             >
               <Volume2 size={18} />
               <span className="text-sm font-bold">NeuroFocus</span>

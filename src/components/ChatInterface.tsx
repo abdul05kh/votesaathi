@@ -38,8 +38,12 @@ export default function ChatInterface() {
 
   const [announcement, setAnnouncement] = useState('');
 
+  /**
+   * Synthesizes speech from text using the Web Speech API.
+   * Ensures previous utterances are cancelled before starting new ones.
+   */
   const speak = useCallback((text: string) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = speechVoiceCode || 'en-IN';
@@ -54,6 +58,10 @@ export default function ChatInterface() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  /**
+   * Orchestrates the message lifecycle: user input -> streaming AI response -> cleanup.
+   * Handles Firebase logging and text-to-speech triggers.
+   */
   const processMessage = useCallback(async (messageText: string) => {
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: messageText };
     setMessages(prev => [...prev, userMessage]);
@@ -87,8 +95,7 @@ export default function ChatInterface() {
       const { saveChatSession } = await import('@/lib/firebase');
       saveChatSession(userMessage.content, accumulatedText, language);
 
-    } catch (error) {
-      console.error('Chat error:', error);
+    } catch {
       const errorMessage: Message = { 
         id: (Date.now() + 1).toString(), 
         role: 'assistant', 
@@ -140,6 +147,9 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  /**
+   * Toggles the voice input listener. Starts/stops the SpeechRecognition engine.
+   */
   const toggleListening = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -150,8 +160,7 @@ export default function ChatInterface() {
           recognitionRef.current.start();
           setIsListening(true);
         }
-      } catch (e) {
-        console.error("Speech recognition error:", e);
+      } catch {
         setIsListening(false);
       }
     }
@@ -166,7 +175,7 @@ export default function ChatInterface() {
       <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-lg animate-pulse-slow">
-            <Sparkles size={20} />
+            <Sparkles size={20} aria-hidden="true" />
           </div>
           <div>
             <h2 className="font-bold text-lg text-slate-800 dark:text-white leading-tight">Saathi Bot</h2>

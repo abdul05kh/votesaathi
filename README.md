@@ -74,7 +74,9 @@ Four accessibility modes that re-wire the entire visual system:
 
 ### 🔐 10. Production Security Hardening
 - **Firebase App Check** (reCAPTCHA v3) enforced — 100% verified request rate
-- **HTTP Security Headers**: HSTS, X-Frame-Options DENY, X-XSS-Protection, CSP, Referrer-Policy
+- **Strict Content Security Policy (CSP)**: Prevents XSS and unauthorized script execution
+- **Permissions-Policy**: Restricts browser features (Camera, Mic) to trusted origins
+- **HTTP Security Headers**: HSTS, X-Frame-Options DENY, X-XSS-Protection, Referrer-Policy
 - **API Domain Restrictions** on GCP to lock the Gemini API key to the production domain
 - **No credentials** in source — all keys managed via Firebase AI Logic & env vars
 
