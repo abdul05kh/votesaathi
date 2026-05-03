@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { MapPin, Navigation, Search, Bell, Clock } from 'lucide-react';
-import { useLanguage } from '@/context/LanguageContext';
 
 export default function PollingPathfinder() {
-  const { language } = useLanguage();
   const [voterId, setVoterId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [boothData, setBoothData] = useState<{
@@ -62,6 +60,7 @@ export default function PollingPathfinder() {
               type="text" 
               value={voterId}
               onChange={(e) => setVoterId(e.target.value.toUpperCase())}
+              aria-label="Voter ID Number"
               placeholder="e.g. ABC1234567"
               className="w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent uppercase font-semibold text-lg dark:text-white"
             />
@@ -106,10 +105,17 @@ export default function PollingPathfinder() {
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 flex gap-3">
-                  <button className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+                  <button 
+                    aria-label="Get directions to booth"
+                    className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+                  >
                     <Navigation size={18} /> Direct Me
                   </button>
-                  <button onClick={handleRemind} className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+                  <button 
+                    onClick={handleRemind} 
+                    aria-label="Set election day reminder"
+                    className="flex-1 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+                  >
                     <Bell size={18} /> Remind
                   </button>
                 </div>

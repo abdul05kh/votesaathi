@@ -1,118 +1,172 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { useVoiceover } from '@/hooks/useVoiceover';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { generateResponse } from '@/lib/gemini';
-import AudioVisualizer from '@/components/AudioVisualizer';
-import { X, ChevronDown, ChevronUp, Mic, MicOff, BrainCircuit } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, BrainCircuit } from 'lucide-react';
+import SentientAI from './SentientAI';
+import MatrixScene from './MatrixScene';
+import { useVoiceoverContext } from '@/context/VoiceoverContext';
+
+function matrixSpeak(text: string, lang: string, onEnd?: () => void) {
+  if (typeof window === 'undefined') { onEnd?.(); return; }
+  window.speechSynthesis.cancel();
+  if (!text) { onEnd?.(); return; }
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = lang;
+  utt.rate = 0.92;
+  utt.pitch = 1.05;
+  const voices = window.speechSynthesis.getVoices();
+  const prefix = lang.split('-')[0];
+  const voice = voices.find(v => v.lang.startsWith(prefix) && v.name.toLowerCase().includes('female'))
+             || voices.find(v => v.lang.startsWith(prefix));
+  if (voice) utt.voice = voice;
+  utt.onend = () => onEnd?.();
+  utt.onerror = () => onEnd?.();
+  window.speechSynthesis.speak(utt);
+}
+
+function matrixStop() {
+  if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+}
+
+function StarParticle() {
+  const [coords] = useState(() => ({
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    duration: Math.random() * 2 + 1,
+    delay: Math.random() * 2,
+  }));
+
+  return (
+    <motion.div
+      animate={{
+        z: [0, 1000],
+        opacity: [0, 1, 0],
+        scale: [0, 5],
+      }}
+      transition={{
+        duration: coords.duration,
+        repeat: Infinity,
+        delay: coords.delay,
+        ease: "linear"
+      }}
+      className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+      style={{
+        left: coords.left,
+        top: coords.top,
+        boxShadow: '0 0 20px 2px #22d3ee'
+      }}
+    />
+  );
+}
 
 export default function ElectionTimeline() {
-  const { t } = useLanguage();
-  const { speak, stop } = useVoiceover();
+  const { t, speechVoiceCode } = useLanguage();
+  const { setIsMatrixActive } = useVoiceoverContext();
   
   const [isActive, setIsActive] = useState(false);
   const [currentScene, setCurrentScene] = useState(0);
   const [isSpeakingState, setIsSpeakingState] = useState(false);
   
-  // Sentient AI State
   const { isListening, transcript, startListening, stopListening } = useSpeechRecognition('en-IN');
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
   
-  // Robust state refs to prevent any closure staleness from rapid scroll events
   const stateRef = useRef({
     scene: 0,
     isSpeaking: false,
     isTransitioning: false,
   });
 
-  const scenes = [
+  const scenes = useMemo(() => [
     { title: t.scene1Title, desc: t.scene1Desc },
     { title: t.scene2Title, desc: t.scene2Desc },
     { title: t.scene3Title, desc: t.scene3Desc },
     { title: t.scene4Title, desc: t.scene4Desc },
     { title: t.scene5Title, desc: t.scene5Desc },
-  ];
+  ], [t]);
 
-  // Lock body scroll and initialize
   useEffect(() => {
     if (isActive) {
       document.body.style.overflow = 'hidden';
-      // Reset state
+      setIsMatrixActive(true);
       stateRef.current = { scene: 0, isSpeaking: true, isTransitioning: true };
-      setCurrentScene(0);
-      setIsSpeakingState(true);
       
-      // Delay first speech slightly for entry animation
-      setTimeout(() => {
-        stop(); // Cancel any existing speech
-        speak(scenes[0].desc, () => {
+      const timer = setTimeout(() => {
+        setCurrentScene(0);
+        setIsSpeakingState(true);
+        
+        matrixStop();
+        matrixSpeak(scenes[0].desc, speechVoiceCode, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
         });
         stateRef.current.isTransitioning = false;
-      }, 1500);
-
+      }, 100);
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = '';
+      };
     } else {
       document.body.style.overflow = '';
-      stop();
+      setIsMatrixActive(false);
+      matrixStop();
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isActive]);
+  }, [isActive, speechVoiceCode, scenes, setIsMatrixActive]);
 
   const advanceScene = useCallback(() => {
-    if (stateRef.current.isSpeaking || stateRef.current.isTransitioning) return;
-    
+    matrixStop();
+    stateRef.current.isSpeaking = false;
+    stateRef.current.isTransitioning = false;
+    setIsSpeakingState(false);
+
     if (stateRef.current.scene < scenes.length - 1) {
       stateRef.current.isTransitioning = true;
       stateRef.current.isSpeaking = true;
       const next = stateRef.current.scene + 1;
       stateRef.current.scene = next;
-      
+
       setCurrentScene(next);
       setIsSpeakingState(true);
-      
-      // Add artificial delay for the hyperspace transition before speaking
+
       setTimeout(() => {
-        stop(); // Cancel any existing speech
-        speak(scenes[next].desc, () => {
+        matrixStop();
+        matrixSpeak(scenes[next].desc, speechVoiceCode, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
         });
         stateRef.current.isTransitioning = false;
       }, 1200);
     } else {
-      setIsActive(false); // Finish
+      setIsActive(false);
     }
-  }, [scenes, speak]);
+  }, [scenes, speechVoiceCode]);
 
   const goBackScene = useCallback(() => {
     if (stateRef.current.isSpeaking || stateRef.current.isTransitioning || isListening || isAiThinking) return;
-    
+
     if (stateRef.current.scene > 0) {
       stateRef.current.isTransitioning = true;
       stateRef.current.isSpeaking = true;
       const prev = stateRef.current.scene - 1;
       stateRef.current.scene = prev;
-      
+
       setCurrentScene(prev);
       setIsSpeakingState(true);
-      
+
       setTimeout(() => {
-        stop(); // Cancel any existing speech
-        speak(scenes[prev].desc, () => {
+        matrixStop();
+        matrixSpeak(scenes[prev].desc, speechVoiceCode, () => {
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
         });
         stateRef.current.isTransitioning = false;
       }, 1200);
     }
-  }, [scenes, speak, isListening, isAiThinking]);
+  }, [scenes, speechVoiceCode, isListening, isAiThinking]);
 
   const handleAskAI = useCallback(() => {
     if (isListening) {
@@ -120,39 +174,36 @@ export default function ElectionTimeline() {
       return;
     }
     
-    // Interrupt current flow
-    stop();
+    matrixStop();
     setIsSpeakingState(false);
     stateRef.current.isSpeaking = false;
     
     startListening(async (text) => {
       setIsAiThinking(true);
-      stateRef.current.isSpeaking = true; // Lock the matrix
-      
+      stateRef.current.isSpeaking = true;
+
       try {
         const response = await generateResponse(text, 'en');
-        const finalResponse = response || "I'm having trouble connecting to my matrix core right now.";
+        const finalResponse = response || "I&apos;m having trouble connecting right now.";
         setAiResponse(finalResponse);
         setIsAiThinking(false);
         setIsSpeakingState(true);
-        
-        stop(); // Cancel any existing speech
-        speak(finalResponse, () => {
+
+        matrixStop();
+        matrixSpeak(finalResponse, speechVoiceCode, () => {
           setAiResponse(null);
           stateRef.current.isSpeaking = false;
           setIsSpeakingState(false);
-          // Auto-resume scene narration if desired, or let user scroll
         });
-      } catch (e) {
+      } catch {
         setIsAiThinking(false);
         stateRef.current.isSpeaking = false;
       }
     });
-  }, [isListening, stopListening, stop, startListening, speak]);
+  }, [isListening, stopListening, speechVoiceCode, startListening]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (!isActive) return;
-    // Debounce hypersensitive trackpads
     if (Math.abs(e.deltaY) < 40) return;
 
     if (e.deltaY > 0) {
@@ -162,7 +213,6 @@ export default function ElectionTimeline() {
     }
   }, [isActive, advanceScene, goBackScene]);
 
-  // Touch handling for mobile
   const touchStartY = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -176,13 +226,11 @@ export default function ElectionTimeline() {
     }
   };
 
-  // Gyroscopic & Kinetic Gravity Engine
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const smoothX = useSpring(mouseX, { stiffness: 40, damping: 20 });
   const smoothY = useSpring(mouseY, { stiffness: 40, damping: 20 });
   
-  // Transform mapped values to subtle 3D rotation
   const rotateX = useTransform(smoothY, [-1, 1], [15, -15]);
   const rotateY = useTransform(smoothX, [-1, 1], [-15, 15]);
 
@@ -195,7 +243,8 @@ export default function ElectionTimeline() {
   }, [isActive, mouseX, mouseY]);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (typeof window === 'undefined') return;
+    
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (e.beta && e.gamma) {
         const normalizedY = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
@@ -205,9 +254,12 @@ export default function ElectionTimeline() {
       }
     };
     
-    // Request permission for iOS 13+ devices
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
+    const deviceEvent = window.DeviceOrientationEvent as unknown as {
+      requestPermission?: () => Promise<string>;
+    };
+
+    if (typeof deviceEvent.requestPermission === 'function') {
+      deviceEvent.requestPermission()
         .then((permissionState: string) => {
           if (permissionState === 'granted') {
             window.addEventListener('deviceorientation', handleOrientation);
@@ -221,7 +273,6 @@ export default function ElectionTimeline() {
     return () => window.removeEventListener('deviceorientation', handleOrientation);
   }, [isActive, mouseX, mouseY]);
 
-  // Hyperspace Variants
   const hyperspaceVariants = {
     enter: (direction: number) => ({
       scale: direction > 0 ? 0.01 : 10,
@@ -237,7 +288,7 @@ export default function ElectionTimeline() {
       filter: 'blur(0px) brightness(100%) hue-rotate(0deg)',
       transition: {
         duration: 1.2,
-        ease: [0.16, 1, 0.3, 1] as [number, number, number, number] // Custom deep ease-out
+        ease: [0.16, 1, 0.3, 1] as any
       }
     },
     exit: (direction: number) => ({
@@ -248,15 +299,20 @@ export default function ElectionTimeline() {
       filter: 'blur(20px) brightness(0%) hue-rotate(-90deg)',
       transition: {
         duration: 1.2,
-        ease: [0.7, 0, 0.84, 0] as [number, number, number, number] // Custom deep ease-in
+        ease: [0.7, 0, 0.84, 0] as any
       }
     })
   };
 
-  // Keep track of direction for animation
+  const [direction, setDirection] = useState(1);
   const prevSceneRef = useRef(0);
-  const direction = currentScene > prevSceneRef.current ? 1 : -1;
-  useEffect(() => { prevSceneRef.current = currentScene; }, [currentScene]);
+  
+  useEffect(() => {
+    if (currentScene !== prevSceneRef.current) {
+      setDirection(currentScene > prevSceneRef.current ? 1 : -1);
+      prevSceneRef.current = currentScene;
+    }
+  }, [currentScene]);
 
   return (
     <>
@@ -279,6 +335,7 @@ export default function ElectionTimeline() {
           </p>
           <button 
             onClick={() => setIsActive(true)}
+            aria-label="Enter the Election Matrix"
             className="px-10 py-5 bg-white text-slate-900 font-black tracking-widest uppercase text-xl rounded-full shadow-[0_0_50px_rgba(255,255,255,0.4)] hover:shadow-[0_0_100px_rgba(255,255,255,0.8)] hover:scale-110 transition-all flex items-center justify-center gap-3 mx-auto"
           >
             Enter The Void
@@ -298,236 +355,78 @@ export default function ElectionTimeline() {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onMouseMove={handleMouseMove}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Election Matrix Interactive Experience"
           >
             {/* Speeding Starfield Particles */}
             <div className="absolute inset-0 pointer-events-none">
-              {[...Array(50)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    z: [0, 1000],
-                    opacity: [0, 1, 0],
-                    scale: [0, 5],
-                  }}
-                  transition={{
-                    duration: Math.random() * 2 + 1,
-                    repeat: Infinity,
-                    delay: Math.random() * 2,
-                    ease: "linear"
-                  }}
-                  className="absolute w-1 h-1 bg-cyan-400 rounded-full"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                    boxShadow: '0 0 20px 2px #22d3ee'
-                  }}
-                />
+              {Array.from({ length: 30 }).map((_, i) => (
+                <StarParticle key={i} />
               ))}
             </div>
 
-            <AudioVisualizer isSpeaking={isSpeakingState} />
+            <SentientAI 
+              isListening={isListening} 
+              isAiThinking={isAiThinking} 
+              isSpeakingState={isSpeakingState} 
+              onAskAI={handleAskAI} 
+            />
 
-            <button 
-              onClick={() => setIsActive(false)}
-              className="absolute top-8 right-8 z-[110] bg-white/10 hover:bg-white/20 hover:rotate-90 p-4 rounded-full text-white backdrop-blur-md transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-              title="Close Matrix"
-            >
-              <X size={32} />
-            </button>
+            <div className="absolute top-6 right-6 z-[130]">
+              <button
+                onClick={() => setIsActive(false)}
+                aria-label="Close Matrix"
+                className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-red-500/20 hover:rotate-90 rounded-2xl text-white/50 hover:text-white backdrop-blur-md transition-all border border-white/10 shadow-lg"
+                title="Exit Matrix"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-            <button 
-              onClick={() => setIsActive(false)}
-              className="absolute top-8 right-28 z-[110] bg-white/10 hover:bg-white/20 px-6 py-4 rounded-full text-white backdrop-blur-md transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] font-bold tracking-widest uppercase text-sm"
-            >
-              Skip Experience
-            </button>
-
-            {/* Scroll Indicator */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center">
-              <span className={`text-sm mb-3 uppercase tracking-[0.3em] font-black ${isSpeakingState || isAiThinking || isListening ? 'text-red-400' : 'text-emerald-400'}`}>
-                {isListening ? "Listening to you..." : isAiThinking ? "Matrix Processing..." : isSpeakingState ? "System Speaking..." : "Scroll To Proceed"}
+              <span className={`text-sm mb-3 uppercase tracking-[0.3em] font-black ${isListening ? 'text-cyan-400' : isAiThinking ? 'text-purple-400' : isSpeakingState ? 'text-red-400' : 'text-emerald-400'}`}>
+                {isListening ? "Listening..." : isAiThinking ? "Thinking..." : isSpeakingState ? "Narrating..." : "Scroll To Proceed"}
               </span>
               <motion.div
                 animate={isSpeakingState || isAiThinking || isListening ? { scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] } : { y: [0, 15, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
                 {isSpeakingState || isAiThinking || isListening ? (
-                  <div className={`w-8 h-8 rounded-full border-4 ${isListening ? 'border-cyan-400 shadow-[0_0_20px_#22d3ee]' : isAiThinking ? 'border-purple-500 shadow-[0_0_20px_#a855f7]' : 'border-red-500 shadow-[0_0_20px_#ef4444]'}`} />
+                  <div className={`w-8 h-8 rounded-full border-4 ${isListening ? 'border-cyan-400' : isAiThinking ? 'border-purple-500' : 'border-red-500'}`} />
                 ) : (
-                  <ChevronDown size={48} className="text-emerald-400 drop-shadow-[0_0_15px_#34d399]" />
+                  <ChevronDown size={48} className="text-emerald-400" />
                 )}
               </motion.div>
             </div>
 
-            {/* AI Talk Button */}
-            <button
-              onClick={handleAskAI}
-              className={`absolute bottom-8 right-8 z-[120] p-5 rounded-full backdrop-blur-md transition-all shadow-[0_0_40px_rgba(0,0,0,0.5)] ${
-                isListening 
-                  ? 'bg-cyan-500 text-white shadow-[0_0_50px_#22d3ee] scale-110' 
-                  : isAiThinking
-                  ? 'bg-purple-600 text-white shadow-[0_0_50px_#9333ea] animate-pulse'
-                  : 'bg-white/10 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30'
-              }`}
-            >
-              {isListening ? <Mic size={28} className="animate-pulse" /> : isAiThinking ? <BrainCircuit size={28} className="animate-spin" /> : <MicOff size={28} />}
-            </button>
+            <MatrixScene 
+              currentScene={currentScene}
+              direction={direction}
+              rotateX={rotateX}
+              rotateY={rotateY}
+              isSpeakingState={isSpeakingState}
+              hyperspaceVariants={hyperspaceVariants}
+            />
 
-            {/* The Hyperspace Matrix Core */}
-            <motion.div 
-              style={{ rotateX, rotateY }}
-              className="absolute inset-0 flex items-center justify-center transform-style-3d pointer-events-none"
-            >
-              <AnimatePresence custom={direction} mode="sync">
+            <div className="absolute bottom-[4%] left-0 right-0 z-[120] px-4 sm:px-6">
+              <div className="max-w-4xl mx-auto bg-[#0b1120]/90 backdrop-blur-3xl p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.9)] relative overflow-hidden group min-h-[220px] flex flex-col justify-center">
+                {/* ECI Side Accent */}
+                <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#f97316] via-[#ffffff] to-[#00d4aa] opacity-80" />
                 
-                {/* === SCENE 1 === */}
-                {currentScene === 0 && (
-                  <motion.div 
-                    key="scene0" custom={direction} variants={hyperspaceVariants} initial="enter" animate="center" exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    {/* Infinite Grid Floor */}
-                    <motion.div 
-                      animate={{ backgroundPosition: ['0px 0px', '0px 100px'] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="absolute w-[300vw] h-[300vh] border border-cyan-500/20 bg-[linear-gradient(rgba(34,211,238,0.1)_2px,transparent_2px),linear-gradient(90deg,rgba(34,211,238,0.1)_2px,transparent_2px)] bg-[size:100px_100px] transform rotateX-75 translateY-64 shadow-[0_0_150px_inset_#0891b2]" 
-                    />
-                    
-                    <div className="relative z-10 w-[500px] h-[600px] bg-black/40 backdrop-blur-3xl border-2 border-cyan-400/50 rounded-3xl p-8 flex flex-col items-center justify-center shadow-[0_0_100px_rgba(34,211,238,0.2)]">
-                      <motion.div animate={{ rotateY: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="w-32 h-40 border-4 border-dashed border-cyan-400 rounded-xl mb-12 flex items-center justify-center relative">
-                        <div className="absolute inset-2 bg-cyan-400/20" />
-                        <div className="w-20 h-2 bg-cyan-400 rounded absolute top-8" />
-                        <div className="w-16 h-2 bg-cyan-400 rounded absolute top-14" />
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* === SCENE 2 === */}
-                {currentScene === 1 && (
-                  <motion.div 
-                    key="scene1" custom={direction} variants={hyperspaceVariants} initial="enter" animate="center" exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className="relative w-[600px] h-[350px] bg-gradient-to-tr from-blue-900/60 to-indigo-900/60 backdrop-blur-3xl border-4 border-blue-400 rounded-[3rem] p-8 shadow-[0_0_150px_rgba(96,165,250,0.5)] overflow-hidden">
-                      <motion.div animate={{ x: ['-100%', '200%'] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute top-0 bottom-0 w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
-                      <div className="flex gap-8 h-full items-center">
-                        <div className="w-48 h-full bg-blue-400/20 rounded-2xl border-2 border-blue-400/50 flex items-center justify-center relative overflow-hidden">
-                          <motion.div animate={{ top: ['0%', '100%', '0%'] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="absolute left-0 right-0 h-2 bg-blue-400 shadow-[0_0_20px_#60a5fa]" />
-                        </div>
-                        <div className="flex-1 flex flex-col gap-6">
-                          <div className="w-full h-8 bg-blue-400/80 rounded-lg shadow-[0_0_15px_#60a5fa]" />
-                          <div className="w-3/4 h-4 bg-blue-400/50 rounded" />
-                          <div className="w-5/6 h-4 bg-blue-400/50 rounded" />
-                          <div className="w-1/2 h-4 bg-blue-400/50 rounded" />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* === SCENE 3 === */}
-                {currentScene === 2 && (
-                  <motion.div 
-                    key="scene2" custom={direction} variants={hyperspaceVariants} initial="enter" animate="center" exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className="relative w-[600px] h-[600px] flex items-center justify-center">
-                      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                        <motion.div
-                          key={i}
-                          animate={isSpeakingState ? { scale: [1, 1.1 + (i * 0.05), 1], opacity: [0.2, 0.8 - (i * 0.1), 0.2] } : { scale: 1, opacity: 0.3 }}
-                          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
-                          className="absolute border-4 border-emerald-400 rounded-full shadow-[0_0_50px_#34d399]"
-                          style={{ width: `${i * 15}%`, height: `${i * 15}%` }}
-                        />
-                      ))}
-                      <motion.div animate={{ rotateZ: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute w-full h-full border-t-8 border-r-8 border-emerald-400 rounded-full opacity-50" />
-                      <div className="w-32 h-32 bg-emerald-400 rounded-full blur-[40px]" />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* === SCENE 4 === */}
-                {currentScene === 3 && (
-                  <motion.div 
-                    key="scene3" custom={direction} variants={hyperspaceVariants} initial="enter" animate="center" exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className="w-[450px] bg-[#0f172a] border-4 border-[#334155] rounded-3xl overflow-hidden shadow-[0_0_200px_rgba(0,0,0,1)] relative">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                      <div className="w-full h-12 bg-[#1e293b] border-b-4 border-[#0f172a] flex items-center justify-center">
-                        <div className="w-20 h-2 bg-red-500 rounded-full shadow-[0_0_15px_#ef4444]" />
-                      </div>
-                      <div className="p-8 flex flex-col gap-6">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="flex justify-between items-center bg-[#1e293b] p-6 rounded-2xl border border-[#334155] shadow-inner">
-                            <div className="w-32 h-6 bg-[#475569] rounded-lg" />
-                            {i === 2 ? (
-                              <motion.div 
-                                animate={isSpeakingState ? { backgroundColor: ["#1d4ed8", "#60a5fa", "#1d4ed8"], scale: [1, 1.1, 1] } : { backgroundColor: "#1d4ed8" }}
-                                transition={{ duration: 0.5, repeat: Infinity }}
-                                className="w-24 h-16 rounded-xl shadow-[0_0_50px_#3b82f6] border-2 border-blue-300 flex items-center justify-center"
-                              >
-                                <div className="w-12 h-3 bg-white/80 rounded-full shadow-lg" />
-                              </motion.div>
-                            ) : (
-                              <div className="w-24 h-16 bg-[#334155] rounded-xl border-b-4 border-[#1e293b]" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* === SCENE 5 === */}
-                {currentScene === 4 && (
-                  <motion.div 
-                    key="scene4" custom={direction} variants={hyperspaceVariants} initial="enter" animate="center" exit="exit"
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className="relative w-[500px] h-[700px] bg-black/80 border-8 border-[#1e293b] rounded-[3rem] overflow-hidden flex justify-center shadow-[0_0_150px_rgba(255,255,255,0.1)]">
-                      <div className="absolute top-0 w-full h-24 bg-gradient-to-b from-[#0f172a] to-transparent z-20 flex items-center justify-center border-b border-white/10">
-                        <div className="w-64 h-4 bg-black rounded-full shadow-inner" />
-                      </div>
-                      
-                      <motion.div 
-                        animate={{ y: ["-100%", "20%", "20%", "100%"] }}
-                        transition={{ duration: 4, repeat: Infinity, times: [0, 0.2, 0.8, 1], ease: "easeInOut" }}
-                        className="absolute top-24 w-[350px] h-[450px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 flex flex-col items-center z-10 rounded-b-lg border-x border-b border-slate-300"
-                      >
-                        <div className="w-24 h-24 bg-slate-100 rounded-full mb-8 border-8 border-emerald-500 shadow-[0_0_30px_#10b981]" />
-                        <div className="w-full h-6 bg-slate-800 rounded mb-6" />
-                        <div className="w-4/5 h-4 bg-slate-400 rounded mb-4" />
-                        <div className="w-3/5 h-4 bg-slate-400 rounded mb-12" />
-                        
-                        <div className="w-20 h-20 rounded-full border-8 border-emerald-500 flex items-center justify-center shadow-[0_0_30px_#10b981]">
-                          <div className="w-10 h-10 bg-emerald-500 rounded-sm transform rotate-45" />
-                        </div>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Cinematic Foreground Text */}
-            <div className="absolute bottom-[20%] left-0 right-0 z-[120] px-8 pointer-events-none">
-              <div className="max-w-5xl mx-auto text-center bg-black/40 backdrop-blur-lg p-8 rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                 <AnimatePresence mode="wait">
                   {aiResponse ? (
                     <motion.div
                       key="ai-response"
-                      initial={{ scale: 0.8, opacity: 0, filter: 'blur(10px)' }}
-                      animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-                      exit={{ scale: 1.1, opacity: 0, filter: 'blur(10px)' }}
-                      transition={{ duration: 0.5 }}
-                      className="border-l-4 border-cyan-400 pl-6 text-left"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="text-left"
                     >
-                      <h3 className="text-xl font-bold text-cyan-400 mb-2 flex items-center gap-2">
-                        <BrainCircuit size={20} /> Matrix Intelligence
+                      <h3 className="text-sm font-black text-cyan-400 mb-3 flex items-center gap-2 uppercase tracking-[0.2em]">
+                        <BrainCircuit size={16} /> Matrix Intelligence
                       </h3>
-                      <p className="text-2xl md:text-4xl text-white font-light leading-relaxed">
+                      <p className="text-xl md:text-3xl text-white font-medium leading-relaxed">
                         {aiResponse}
                       </p>
                     </motion.div>
@@ -538,39 +437,67 @@ export default function ElectionTimeline() {
                       animate={{ opacity: 1 }}
                       className="text-left"
                     >
-                      <h3 className="text-lg font-bold text-slate-400 mb-2">You asked:</h3>
-                      <p className="text-2xl text-white italic">"{transcript}"</p>
+                      <h3 className="text-sm font-black text-slate-500 mb-3 uppercase tracking-[0.2em]">User Query</h3>
+                      <p className="text-xl md:text-3xl text-white italic font-light">&quot;{transcript}&quot;</p>
                     </motion.div>
                   ) : (
                     <motion.div
                       key={currentScene}
-                      initial={{ y: 30, opacity: 0, filter: 'blur(10px)' }}
-                      animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-                      exit={{ y: -30, opacity: 0, filter: 'blur(10px)' }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-left"
                     >
-                      <h2 className="text-4xl md:text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">
-                        {scenes[currentScene].title}
-                      </h2>
-                      <p className="text-2xl md:text-3xl text-cyan-200 font-light max-w-4xl mx-auto leading-relaxed">
-                        {scenes[currentScene].desc}
-                      </p>
+                      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="flex-1">
+                          <h2 className="text-2xl md:text-4xl font-black mb-3 text-white tracking-tight flex items-center gap-4">
+                            <span className="text-[#f97316] opacity-50 text-xl">0{currentScene + 1}</span>
+                            {scenes[currentScene].title}
+                          </h2>
+                          <p className="text-base md:text-lg text-slate-300 font-light leading-relaxed max-w-2xl">
+                            {scenes[currentScene].desc}
+                          </p>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3">
+                          <button
+                            onClick={() => advanceScene()}
+                            disabled={isListening || isAiThinking}
+                            className={`flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black tracking-widest uppercase text-sm transition-all shadow-2xl ${
+                              isListening || isAiThinking
+                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
+                                : 'bg-[#00d4aa] text-black hover:scale-105 active:scale-95 hover:shadow-[#00d4aa]/30'
+                            }`}
+                          >
+                            {currentScene < scenes.length - 1 ? 'Next Phase' : 'Complete'}
+                            <ChevronRight size={18} />
+                          </button>
+                        </div>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Progress dot indicators */}
+                <div className="flex gap-2 mt-8 justify-start">
+                  {scenes.map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`h-1 rounded-full transition-all duration-500 ${i === currentScene ? 'w-8 bg-[#f97316]' : 'w-2 bg-white/10'}`} 
+                    />
+                  ))}
+                </div>
               </div>
             </div>
             
-            {/* Sci-Fi Progress Bar */}
             <div className="absolute top-0 left-0 right-0 h-2 bg-slate-900 z-[120]">
               <motion.div 
                 className="h-full bg-cyan-400 shadow-[0_0_20px_#22d3ee]"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentScene + 1) / scenes.length) * 100}%` }}
-                transition={{ duration: 1, ease: "easeInOut" }}
+                transition={{ duration: 1 }}
               />
             </div>
-            
           </motion.div>
         )}
       </AnimatePresence>

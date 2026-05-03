@@ -13,7 +13,7 @@ export default function AudioVisualizer({ isSpeaking }: AudioVisualizerProps) {
   if (!isSpeaking) return null;
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 glass-bright-card px-4 py-2 rounded-full border border-primary/20 shadow-lg">
+    <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 glass-bright-card px-4 py-2 rounded-full border border-primary/20 shadow-lg" aria-hidden="true">
       <div className="flex items-center gap-1 h-6">
         {[1, 2, 3, 4].map((i) => (
           <motion.div

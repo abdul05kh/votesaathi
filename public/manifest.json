@@ -1,0 +1,23 @@
+{
+  "name": "VoteSaathi",
+  "short_name": "VoteSaathi",
+  "description": "AI Election Assistant for India - Har Vote Ki Awaaz",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05080f",
+  "theme_color": "#ff9933",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,195 +1,229 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '@/context/LanguageContext';
-import ChatInterface from '@/components/ChatInterface';
-import EVMSimulator from '@/components/EVMSimulator';
-import ArEvm from '@/components/ArEvm';
 import AccessibilityToggle from '@/components/AccessibilityToggle';
-import ElectionTimeline from '@/components/ElectionTimeline';
-import FloatingStickers from '@/components/FloatingStickers';
-import { ShieldCheck, MessageSquare, Box, ArrowDown, Camera, MapPin, Scale } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Box, ArrowDown, Camera, MapPin, Scale, Zap, Users, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
-import VoteVision from '@/components/VoteVision';
-import PollingPathfinder from '@/components/PollingPathfinder';
-import ElectionLawyer from '@/components/ElectionLawyer';
+
+// Lazy-load heavy components for faster initial page load
+const ChatInterface = dynamic(() => import('@/components/ChatInterface'), { ssr: false });
+const EVMSimulator = dynamic(() => import('@/components/EVMSimulator'), { ssr: false });
+const ArEvm = dynamic(() => import('@/components/ArEvm'), { ssr: false });
+const VoteVision = dynamic(() => import('@/components/VoteVision'), { ssr: false });
+const PollingPathfinder = dynamic(() => import('@/components/PollingPathfinder'), { ssr: false });
+const ElectionLawyer = dynamic(() => import('@/components/ElectionLawyer'), { ssr: false });
+const ElectionTimeline = dynamic(() => import('@/components/ElectionTimeline'), { ssr: false });
+const FloatingStickers = dynamic(() => import('@/components/FloatingStickers'), { ssr: false });
+
+const TABS = [
+  { id: 'chat',       label: 'Saathi AI',     icon: MessageSquare },
+  { id: 'evm',        label: 'EVM Simulator',  icon: Box           },
+  { id: 'ar',         label: 'AR Hologram',    icon: Camera        },
+  { id: 'vision',     label: 'DocVerifier',    icon: ShieldCheck   },
+  { id: 'pathfinder', label: 'Booth Finder',   icon: MapPin        },
+  { id: 'lawyer',     label: 'Sanshay AI',     icon: Scale         },
+] as const;
+
+type TabId = typeof TABS[number]['id'];
+
+const STATS = [
+  { value: '968M+', label: 'Registered Voters', icon: Users },
+  { value: '12+', label: 'Regional Languages', icon: Award },
+  { value: '100%', label: 'AI-Powered', icon: Zap },
+];
 
 export default function Home() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'chat' | 'evm' | 'ar' | 'vision' | 'pathfinder' | 'lawyer'>('chat');
+  const [activeTab, setActiveTab] = useState<TabId>('chat');
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="flex flex-col h-full w-full relative bg-transparent text-slate-800 overflow-x-hidden">
+    <div className="flex flex-col w-full relative overflow-x-hidden">
       <FloatingStickers />
       <AccessibilityToggle />
-      
-      {/* Hero Section */}
-      <section className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+
+      {/* ── HERO ── */}
+      <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+        {/* Decorative rings */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[700px] h-[700px] rounded-full border border-white/[0.03] absolute animate-pulse-ring" style={{ animationDelay: '0s' }} />
+          <div className="w-[900px] h-[900px] rounded-full border border-white/[0.025] absolute animate-pulse-ring" style={{ animationDelay: '0.5s' }} />
+          <div className="w-[1100px] h-[1100px] rounded-full border border-white/[0.02] absolute animate-pulse-ring" style={{ animationDelay: '1s' }} />
+        </div>
+
+        {/* Top badge */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto glass-bright p-8 md:p-16 rounded-[3rem]"
+          transition={{ duration: 0.6 }}
+          className="badge badge-accent mb-6"
         >
-          <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm">
-            Welcome to VoteSaathi
-          </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            {t.heroTitle1} <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">{t.heroTitle2}</span>
+          <Zap size={11} />
+          India&apos;s AI-Powered Election Assistant
+        </motion.div>
+
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="max-w-4xl mx-auto"
+        >
+          <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[0.95] mb-6">
+            {t.heroTitle1}
+            <br />
+            <span
+              className="text-transparent bg-clip-text"
+              style={{ backgroundImage: 'linear-gradient(135deg, #f97316 0%, #fb923c 40%, #00d4aa 100%)' }}
+            >
+              {t.heroTitle2}
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-700 mb-10 max-w-2xl mx-auto leading-relaxed">
+
+          <p className="text-lg md:text-xl text-[var(--foreground-muted)] mb-12 max-w-2xl mx-auto leading-relaxed">
             {t.heroSubtitle}
           </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={() => scrollToSection('learn-to-vote')}
-              className="px-8 py-4 rounded-full bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center gap-2"
-            >
-              {t.startLearning}
-              <ArrowDown size={20} />
-            </button>
-            <button 
-              onClick={() => scrollToSection('practice-zone')}
-              className="px-8 py-4 rounded-full bg-white text-slate-900 font-bold text-lg border-2 border-slate-200 hover:border-primary transition-all shadow-md"
-            >
-              {t.trySimulator}
-            </button>
-          </div>
+        </motion.div>
+
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
+          <button onClick={() => scrollToSection('learn-to-vote')} className="btn-primary">
+            {t.startLearning}
+            <ArrowDown size={18} />
+          </button>
+          <button onClick={() => scrollToSection('practice-zone')} className="btn-secondary">
+            {t.trySimulator}
+          </button>
+        </motion.div>
+
+        {/* Stats strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          className="mt-20 flex flex-col sm:flex-row items-center gap-6 sm:gap-12"
+        >
+          {STATS.map(({ value, label, icon: Icon }) => (
+            <div key={label} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)' }}>
+                <Icon size={18} style={{ color: '#f97316' }} />
+              </div>
+              <div className="text-left">
+                <div className="text-2xl font-black text-[var(--foreground)]">{value}</div>
+                <div className="text-xs text-[var(--foreground-muted)] font-medium">{label}</div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Scroll cue */}
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+        >
+          <ArrowDown size={22} className="text-[var(--foreground-muted)]" />
         </motion.div>
       </section>
 
-      {/* Educational Timeline Section */}
+      {/* ── ELECTION MATRIX ── */}
       <ElectionTimeline />
 
-      {/* Interactive Practice Zone */}
-      <section id="practice-zone" className="py-24 px-4 bg-white border-t border-slate-200 relative z-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">{t.practiceTitle}</h2>
-            <p className="text-lg text-slate-600">
-              {t.practiceSubtitle}
-            </p>
+      {/* ── PRACTICE ZONE ── */}
+      <section id="practice-zone" className="py-24 px-4 relative">
+        {/* Section header */}
+        <div className="max-w-5xl mx-auto mb-14 text-center">
+          <div className="badge badge-primary inline-flex mb-4">Tools & AI</div>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">{t.practiceTitle}</h2>
+          <p className="text-[var(--foreground-muted)] text-lg max-w-xl mx-auto">{t.practiceSubtitle}</p>
+        </div>
+
+        <div className="max-w-6xl mx-auto glass-bright-card rounded-3xl overflow-hidden">
+          {/* Tab strip */}
+          <div className="flex border-b overflow-x-auto" style={{ borderColor: 'var(--border-bright)', scrollbarWidth: 'none' }}>
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`tab-strip-btn ${activeTab === id ? 'active' : ''}`}
+              >
+                <Icon size={16} />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
           </div>
 
-          <div className="w-full glass-bright-card rounded-3xl border border-slate-200 overflow-hidden relative z-20">
-            {/* Navigation Tabs */}
-            <div className="flex border-b border-slate-200">
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'chat' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <MessageSquare size={20} />
-                Saathi Bot
-              </button>
-              <button
-                onClick={() => setActiveTab('evm')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'evm' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Box size={20} />
-                EVM Simulator
-              </button>
-              <button
-                onClick={() => setActiveTab('ar')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'ar' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Camera size={20} />
-                AR Hologram
-              </button>
-              <button
-                onClick={() => setActiveTab('vision')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'vision' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Camera size={20} />
-                DocVerifier
-              </button>
-              <button
-                onClick={() => setActiveTab('pathfinder')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'pathfinder' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <MapPin size={20} />
-                Booth Locator
-              </button>
-              <button
-                onClick={() => setActiveTab('lawyer')}
-                className={`flex-1 py-4 flex items-center justify-center gap-2 font-semibold text-lg transition-colors ${
-                  activeTab === 'lawyer' 
-                    ? 'text-accent border-b-2 border-accent bg-accent/5' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Scale size={20} />
-                Lawyer
-              </button>
-            </div>
+          {/* Content */}
+          <div className="p-4 md:p-8 min-h-[600px]">
+            {activeTab === 'chat' && (
+              <div className="animate-fade-in h-full">
+                <ChatInterface />
+              </div>
+            )}
 
-            {/* Content Area */}
-            <div className="bg-slate-50/80 p-4 md:p-8 min-h-[600px]">
-              {activeTab === 'chat' ? (
-                <div className="animate-fade-in h-full">
-                  <ChatInterface />
-                </div>
-              ) : activeTab === 'evm' ? (
-                <div className="animate-fade-in">
-                  <div className="mb-6 text-center">
-                    <h3 className="text-2xl font-bold flex items-center justify-center gap-2 text-slate-900">
-                      <ShieldCheck className="text-secondary" />
-                      Practice Voting
-                    </h3>
-                    <p className="text-slate-600 mt-2">
-                      Press the blue button next to your candidate's symbol. You will hear a beep and see the VVPAT slip print for 7 seconds to verify your vote.
-                    </p>
+            {activeTab === 'evm' && (
+              <div className="animate-fade-in">
+                <div className="mb-8 text-center">
+                  <div className="inline-flex items-center gap-2 mb-3">
+                    <ShieldCheck size={22} style={{ color: '#00d4aa' }} />
+                    <h3 className="text-2xl font-bold text-[var(--foreground)]">Practice Voting</h3>
                   </div>
-                  <EVMSimulator />
+                  <p className="text-[var(--foreground-muted)] max-w-lg mx-auto">
+                    Press the blue button next to your candidate&apos;s symbol. You will hear a beep and see the VVPAT slip print for 7 seconds.
+                  </p>
                 </div>
-              ) : activeTab === 'ar' ? (
-                <div className="animate-fade-in h-full flex-1">
-                  <ArEvm />
-                </div>
-              ) : activeTab === 'vision' ? (
-                <div className="animate-fade-in h-full flex-1">
-                  <VoteVision />
-                </div>
-              ) : activeTab === 'pathfinder' ? (
-                <div className="animate-fade-in h-full flex-1">
-                  <PollingPathfinder />
-                </div>
-              ) : (
-                <div className="animate-fade-in h-full flex-1">
-                  <ElectionLawyer />
-                </div>
-              )}
-            </div>
+                <EVMSimulator />
+              </div>
+            )}
+
+            {activeTab === 'ar' && (
+              <div className="animate-fade-in h-full flex-1">
+                <ArEvm />
+              </div>
+            )}
+
+            {activeTab === 'vision' && (
+              <div className="animate-fade-in h-full flex-1">
+                <VoteVision />
+              </div>
+            )}
+
+            {activeTab === 'pathfinder' && (
+              <div className="animate-fade-in h-full flex-1">
+                <PollingPathfinder />
+              </div>
+            )}
+
+            {activeTab === 'lawyer' && (
+              <div className="animate-fade-in h-full flex-1">
+                <ElectionLawyer />
+              </div>
+            )}
           </div>
         </div>
       </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="py-10 px-4 mt-8 border-t" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[var(--foreground-muted)]">
+          <div className="flex items-center gap-2 font-bold text-lg" style={{ background: 'linear-gradient(135deg,#f97316,#00d4aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} aria-label="VoteSaathi Logo">
+            VoteSaathi
+          </div>
+          <p>Built for India&apos;s 968M voters — Every Vote Counts.</p>
+          <p>Powered by Gemini AI · ECI Guidelines</p>
+        </div>
+      </footer>
     </div>
   );
 }

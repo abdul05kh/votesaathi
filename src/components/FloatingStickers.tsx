@@ -21,13 +21,14 @@ export default function FloatingStickers() {
   const stickers = Array.from({ length: 15 }).map((_, i) => getStickerData(i));
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40" aria-hidden="true">
       {stickers.map((sticker, i) => (
         <motion.div
           key={i}

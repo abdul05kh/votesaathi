@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from 'react';
 
+/**
+ * Hook to handle Web Speech Recognition API with standard error handling and state management.
+ */
 export function useSpeechRecognition(languageCode: string = 'en-IN') {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -14,38 +18,49 @@ export function useSpeechRecognition(languageCode: string = 'en-IN') {
       return;
     }
 
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.lang = languageCode;
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = languageCode;
 
-    recognitionRef.current.onstart = () => {
+    recognition.onstart = () => {
       setIsListening(true);
       setTranscript('');
     };
 
-    recognitionRef.current.onresult = (event: any) => {
+    recognition.onresult = (event: any) => {
       const current = event.resultIndex;
       const text = event.results[current][0].transcript;
       setTranscript(text);
       onResult(text);
     };
 
-    recognitionRef.current.onerror = (event: any) => {
-      console.error('Speech recognition error', event.error);
+    recognition.onerror = (event: any) => {
+      // "no-speech" fires when the mic times out with no audio — completely normal.
+      // "aborted" fires when we call .stop() manually — also expected.
+      // Neither should be treated as an error or shown in the console overlay.
+      const silentErrors = ['no-speech', 'aborted', 'audio-capture'];
+      if (!silentErrors.includes(event.error)) {
+        console.warn('Speech recognition error:', event.error);
+      }
       setIsListening(false);
     };
 
-    recognitionRef.current.onend = () => {
+    recognition.onend = () => {
       setIsListening(false);
     };
 
-    recognitionRef.current.start();
+    recognition.start();
   }, [languageCode]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // Ignore stop errors
+      }
       setIsListening(false);
     }
   }, []);

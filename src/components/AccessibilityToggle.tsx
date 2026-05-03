@@ -1,14 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, Type, Volume2, Settings2, Ear } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, Type, Volume2, Settings2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useVoiceoverContext } from '@/context/VoiceoverContext';
+import VoiceoverToggle from './VoiceoverToggle';
+
 
 export default function AccessibilityToggle() {
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<'standard' | 'high-contrast' | 'picto' | 'neuro'>('standard');
 
   const { speechVoiceCode } = useLanguage();
+  const { voiceoverEnabled, setVoiceoverEnabled } = useVoiceoverContext();
 
   useEffect(() => {
     // Remove all classes first
@@ -49,45 +54,62 @@ export default function AccessibilityToggle() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 accessibility-menu">
-      {isOpen && (
-        <div className="absolute bottom-16 right-0 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 w-48 mb-2 animate-fade-in">
-          <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Accessibility Modes
-          </div>
-          
-          <button 
-            onClick={() => setMode('standard')}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${mode === 'standard' ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="absolute bottom-16 right-0 bg-[#0b1120]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-3 flex flex-col gap-2 w-56 mb-2"
           >
-            <Type size={18} />
-            <span className="text-sm font-medium">Standard</span>
-          </button>
-          
-          <button 
-            onClick={() => setMode('high-contrast')}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${mode === 'high-contrast' ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-          >
-            <Eye size={18} />
-            <span className="text-sm font-medium">High Contrast</span>
-          </button>
+            <div className="px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+              Interface Experience
+            </div>
+            
+            <button 
+              onClick={() => setMode('standard')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'standard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-white/5'}`}
+              aria-label="Switch to standard visual mode"
+            >
+              <Type size={18} />
+              <span className="text-sm font-bold">Standard</span>
+            </button>
+            
+            <button 
+              onClick={() => setMode('high-contrast')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'high-contrast' ? 'bg-[#ffff00] text-black shadow-lg shadow-yellow-500/20' : 'text-slate-400 hover:bg-white/5'}`}
+              aria-label="Switch to high contrast mode"
+            >
+              <Eye size={18} />
+              <span className="text-sm font-bold">Contrast+</span>
+            </button>
 
-          <button 
-            onClick={() => setMode('picto')}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${mode === 'picto' ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-          >
-            <span className="text-lg leading-none">🖼️</span>
-            <span className="text-sm font-medium">PictoPolitics</span>
-          </button>
+            <button 
+              onClick={() => setMode('picto')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'picto' ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-slate-400 hover:bg-white/5'}`}
+              aria-label="Switch to PictoVishwa icon-assisted mode"
+            >
+              <span className="text-lg leading-none">🖼️</span>
+              <span className="text-sm font-bold">PictoVishwa</span>
+            </button>
 
-          <button 
-            onClick={() => setMode('neuro')}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${mode === 'neuro' ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-          >
-            <Volume2 size={18} />
-            <span className="text-sm font-medium">NeuroSaathi</span>
-          </button>
-        </div>
-      )}
+            <button 
+              onClick={() => setMode('neuro')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${mode === 'neuro' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:bg-white/5'}`}
+              aria-label="Switch to NeuroFocus reading-assistance mode"
+            >
+              <Volume2 size={18} />
+              <span className="text-sm font-bold">NeuroFocus</span>
+            </button>
+
+            <div className="h-px bg-white/10 my-1 mx-2" />
+
+            <div className="px-2 py-1">
+              <VoiceoverToggle />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <button
         onClick={() => setIsOpen(!isOpen)}

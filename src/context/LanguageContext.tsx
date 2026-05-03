@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 type Language = 'en' | 'hi' | 'te' | 'bn' | 'ta';
 
@@ -142,14 +142,34 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
+  const [activeSpeechCode, setActiveSpeechCode] = useState('en-IN');
 
-  // We can load from localStorage if we wanted, but default to 'en' for now
+  React.useEffect(() => {
+    // Sync with Google Translate or browser language changes
+    const observer = new MutationObserver(() => {
+      const htmlLang = document.documentElement.lang.split('-')[0];
+      const match = Object.entries(speechCodes).find(([k]) => k === htmlLang);
+      if (match) {
+        setActiveSpeechCode(match[1]);
+      } else {
+        // Fallback or generic codes for common Indian languages if google uses different codes
+        const indianMap: Record<string, string> = {
+          'hi': 'hi-IN', 'te': 'te-IN', 'ta': 'ta-IN', 'bn': 'bn-IN', 
+          'mr': 'mr-IN', 'gu': 'gu-IN', 'kn': 'kn-IN', 'ml': 'ml-IN'
+        };
+        if (indianMap[htmlLang]) setActiveSpeechCode(indianMap[htmlLang]);
+      }
+    });
+
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    return () => observer.disconnect();
+  }, []);
 
   const value = {
     language,
     setLanguage,
     t: dictionaries[language],
-    speechVoiceCode: speechCodes[language]
+    speechVoiceCode: activeSpeechCode
   };
 
   return (

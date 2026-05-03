@@ -45,7 +45,7 @@ export default function ArEvm() {
     setVotedFor(candidateIndex);
     // Play beep sound
     const audio = new Audio('/beep.mp3'); // Assuming beep.mp3 exists or fallback
-    audio.play().catch(e => console.log("Audio play failed"));
+    audio.play().catch(() => console.log("Audio play failed"));
     
     setTimeout(() => {
       setVotedFor(null);
@@ -73,6 +73,7 @@ export default function ArEvm() {
           <button
             onClick={startCamera}
             className="px-8 py-4 bg-cyan-500 text-white font-bold rounded-full shadow-[0_0_30px_#22d3ee] hover:bg-cyan-400 transition-all flex items-center justify-center gap-2 mx-auto"
+            aria-label="Grant camera access to start AR hologram"
           >
             <Camera size={20} /> Grant Camera Access
           </button>
@@ -95,6 +96,7 @@ export default function ArEvm() {
           <button 
             onClick={stopCamera}
             className="absolute top-4 right-4 z-50 p-2 bg-red-500 rounded-full text-white shadow-[0_0_15px_#ef4444]"
+            aria-label="Close AR experience"
           >
             <XCircle size={24} />
           </button>
@@ -149,6 +151,7 @@ export default function ArEvm() {
                       <button 
                         onClick={() => handleVote(idx)}
                         disabled={votedFor !== null}
+                        aria-label={`Vote for ${candidate.name}`}
                         className={`w-full h-full rounded-full border-2 transition-all ${
                           votedFor === idx 
                             ? 'bg-red-500 border-red-400 shadow-[0_0_20px_#ef4444]' 
